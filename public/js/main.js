@@ -1,5 +1,11 @@
 //runExp() prints "Search Expedia and Partners" when user selects Expedia
 //else calls runAir()
+
+
+//all lon lats for each new search go here in order
+allLocations = [];
+
+
 function runExp() {
   
   if (isAir == 0) {
@@ -44,7 +50,7 @@ function getExpedia() {
     }
 
     ruc = res['HotelListResponse']['HotelList']['HotelSummary'];
-
+    allLocations = [];
     for (i in ruc) {
 
       var name = ruc[i]['name'];
@@ -54,15 +60,111 @@ function getExpedia() {
       var image = 'http://origin-images.travelnow.com/' + ruc[i]['thumbNailUrl'];
       var url = ruc[i]['deepLink'];
 
+      var lon = ruc[i]['longitude'];
+      var lat = ruc[i]['latitude'];
+
+      allLocations.push({'lat':parseFloat(lat), 'lng':parseFloat(lon), 'name':name})
       var rate = "$" + parseFloat(ruc[i]['lowRate']).toFixed(0);;
       var type = "Expedia";
       console.log(placeId + "desc:  " +desc );
-      addPlace(name, image, desc, url, locDesc, rate, type);
+      addPlace(name, image, desc, url, locDesc, rate, type, lat, lon);
 
     }
   })
+
+
+  //all places added
+
+  //add event listener for map
+
+  setTimeout(function(){
+
+    var lat = $('#somethingWicked div a div:nth(0)').attr('lat');
+    var lon = $('#somethingWicked div a div:nth(0)').attr('lon');
+
+    genMap(lat, lon);
+  }, 5000)
+
+
+  setTimeout(function(){
+
+
+         $('#somethingWicked div a div').on('mouseover', function(){
+              //alert('hello');
+       
+            console.log($(this).attr('lat'));
+            var lat =$(this).attr('lat');
+            var lon = $(this).attr('lon');
+
+            addMarker({'lat':lat, 'lon':lon});
+
+            $(this).off('mouseover');
+
+           })
+
+  }, 2000)
+ 
 }
 
+
+
+
+function genMap(lat, lon){
+var mapWidth= (screen.width*.4)+'px';
+
+var mapHeight= (screen.height)+'px';
+
+
+//var mapWidth= '400px';
+
+//var mapHeight= '400px';
+
+
+console.log(mapWidth);
+
+  $('html').append('<div style="position:fixed; height:100%; display:block; right:0px; width:40%; z-index:400; top:0px; background-color:gray" class="mapPlace"><div id="mapParent" style="position:relative"><div id="map" style="position:absolute; height:'+mapHeight+'; width:'+mapWidth+';"></div></div></div>')
+console.log(lat)
+console.log(lon)
+  setTimeout(function(){
+         map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: parseFloat(lat), lng: parseFloat(lon)},
+          zoom: 12
+          });
+  
+  }, 200)
+
+
+
+    $(window).scroll(function (event) {
+        var scroll = $(window).scrollTop();
+        if(scroll > 500){
+          $('.mapPlace').fadeIn()
+
+        }
+        else{
+          $('.mapPlace').fadeOut()
+
+          
+        }
+    // Do something
+    });
+
+
+    setTimeout(function(){
+        for(i in allLocations){
+
+             var marker = new google.maps.Marker({
+                position: {lat:allLocations[i]['lat'], lng:allLocations[i]['lng']},
+                 map: map,
+                title: allLocations[i]['name']
+      });
+
+        }
+      
+    }, 500)
+
+
+}
 //getAirBnB() calls addPlace() to update DOM if a list of hotels are found for the searched destination
 //otherwise retunrs "No results found"
 function getAirBnB() {
@@ -96,10 +198,12 @@ function getAirBnB() {
 }
 
 //addPlace() appends to the list of hotels/abodes with the name, image, desc, url, locDesc, rate, and type
-function addPlace(name, image, desc, url, locDesc, rate, type) {
+function addPlace(name, image, desc, url, locDesc, rate, type, lat, lon) {
 
+
+  var doShow = checkFilters({'price':rate});
   theD = $('<div />').css({
-    'width': '100%',
+    'width': '60%',
     'height': '250px',
     'background-color': 'white',
     'font-size': '20px',
@@ -110,12 +214,19 @@ function addPlace(name, image, desc, url, locDesc, rate, type) {
     'border-bottom-width': '2px',
     'border-bottom-style': 'solid',
     'border-bottom-color': '#999'
-  }).html('<a href="' + url + '" style="text-decoration:none" target="_blank"><div style="float:left; width: 30%; padding:5px; margin:5px; display:inline-block;"><h1>' + rate + '</h1><br><img src="' + image + '" style="height:100px; width:100px"></div><div style="display:inline-block; width:60%; float:right"><h2 >' + name + '</h2><br><h3 style="font-size:15px">' + desc + '</h3><br><p>' + locDesc + '</p></div></a>');
+  }).html('<a href="' + url + '" style="text-decoration:none" target="_blank"><div lon = "'+lon+'" lat="'+lat+'" style="float:left; width: 30%; padding:5px; margin:5px; display:inline-block;"><h1>' + rate + '</h1><br><img src="' + image + '" style="height:100px; width:100px"></div><div style="display:inline-block; width:60%; float:right"><h2 >' + name + '</h2><br><h3 style="font-size:15px">' + desc + '</h3><br><p>' + locDesc + '</p></div></a>');
 
   theD.prependTo('#somethingWicked');
 
+
+
 }
 
+
+function checkFilters(arr){
+
+  return truel
+}
 //0 is expedia, 1 is AirBnB
 isAir = 0;
 
@@ -168,4 +279,13 @@ function init1() {
 function doForm() {
 
   $('#modLink').click();
+}
+
+
+function addMarker(params){
+  console.log(addMarker);
+
+  console.log(params.lat);
+
+  console.log(params.lon);
 }
