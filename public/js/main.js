@@ -6,6 +6,13 @@
 allLocations = [];
 
 
+//all markers on the page for current search
+
+allMarkers = [];
+
+
+
+
 function runExp() {
   
   if (isAir == 0) {
@@ -89,23 +96,54 @@ function getExpedia() {
   setTimeout(function(){
 
 
-         $('#somethingWicked div a div').on('mouseover', function(){
+         $('.aResult').parent().on('mouseover', function(){
               //alert('hello');
-       
-            console.log($(this).attr('lat'));
-            var lat =$(this).attr('lat');
-            var lon = $(this).attr('lon');
+            var thisOne = $(this).find('.aResult');
+            //console.log(index)
+            console.log('hovering');
+            console.log(thisOne.attr('lat'));
+            
+            var lat =thisOne.attr('lat');
+            var lon = thisOne.attr('lon');
 
-            addMarker({'lat':lat, 'lon':lon});
+            var eachElem = $('.aResult');
+            console.log('for loop');
+            for(ll=0; ll<eachElem.length; ll++){
 
-            $(this).off('mouseover');
+              ///return;
+
+
+                if(lat == $(eachElem[ll]).attr('lat') && lon == $(eachElem[ll]).attr('lon')){
+                  console.log($(eachElem[ll]).attr('lat'))
+              
+                  allMarkers[ll].setIcon('images/nelsonMarkerActive.png');
+                 // alert('got it! number is '+l);
+
+                }
+                else{
+                   allMarkers[ll].setIcon('images/nelsonMarker.png');
+                
+                }
+            }
+
+
+            //addMarker({'lat':lat, 'lon':lon});
+
+            //$(this).off('mouseover');
 
            })
 
-  }, 2000)
+  }, 4000)
  
 }
 
+
+
+function convertDate(inputFormat) {
+  function pad(s) { return (s < 10) ? '0' + s : s; }
+  var d = new Date(inputFormat);
+  return [pad(d.getMonth()+1), pad(d.getDate()), d.getFullYear()].join('/');
+}
 
 
 
@@ -153,11 +191,14 @@ console.log(lon)
     setTimeout(function(){
         for(i in allLocations){
 
-             var marker = new google.maps.Marker({
-                position: {lat:allLocations[i]['lat'], lng:allLocations[i]['lng']},
-                 map: map,
-                title: allLocations[i]['name']
-      });
+            var marker = new google.maps.Marker({
+                      position: {lat:allLocations[i]['lat'], lng:allLocations[i]['lng']},
+                       map: map,
+                      title: allLocations[i]['name'],
+                      icon: 'images/nelsonMarker.png'
+            });
+
+            allMarkers.push(marker);
 
         }
       
@@ -214,9 +255,9 @@ function addPlace(name, image, desc, url, locDesc, rate, type, lat, lon) {
     'border-bottom-width': '2px',
     'border-bottom-style': 'solid',
     'border-bottom-color': '#999'
-  }).html('<a href="' + url + '" style="text-decoration:none" target="_blank"><div lon = "'+lon+'" lat="'+lat+'" style="float:left; width: 30%; padding:5px; margin:5px; display:inline-block;"><h1>' + rate + '</h1><br><img src="' + image + '" style="height:100px; width:100px"></div><div style="display:inline-block; width:60%; float:right"><h2 >' + name + '</h2><br><h3 style="font-size:15px">' + desc + '</h3><br><p>' + locDesc + '</p></div></a>');
+  }).html('<a href="' + url + '" style="text-decoration:none" target="_blank"><div lon = "'+lon+'" lat="'+lat+'" class="aResult" style="float:left; width: 30%; padding:5px; margin:5px; display:inline-block;"><h1>' + rate + '</h1><br><img src="' + image + '" style="height:100px; width:100px"></div><div style="display:inline-block; width:60%; float:right"><h2 >' + name + '</h2><br><h3 style="font-size:15px">' + desc + '</h3><br><p>' + locDesc + '</p></div></a>');
 
-  theD.prependTo('#somethingWicked');
+  theD.appendTo('#somethingWicked');
 
 
 
@@ -225,7 +266,7 @@ function addPlace(name, image, desc, url, locDesc, rate, type, lat, lon) {
 
 function checkFilters(arr){
 
-  return truel
+  return true;
 }
 //0 is expedia, 1 is AirBnB
 isAir = 0;
@@ -235,6 +276,9 @@ $(window).load(init1);
 //init1() is run when page initially loads
 //isAir = 0 (Expedia) is initially set
 function init1() {
+
+  $('#arrival').val(convertDate(new Date()));
+    $('#departure').val(convertDate(new Date(new Date().setDate(new Date().getDate()+1))));
  console.log("hi");
   $('a').on('click', function(e) {
     e.preventDefault();
